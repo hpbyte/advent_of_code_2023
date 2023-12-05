@@ -11,6 +11,10 @@ fn main() {
     if let Some(ans) = process_part1(filename) {
         println!("The sum of all of the calibration values: {}", ans);
     }
+
+    if let Some(ans) = process_part2(filename) {
+        println!("The sum of all of the calibration values: {}", ans);
+    }
 }
 
 #[cfg(test)]
@@ -19,7 +23,13 @@ mod tests {
 
     #[test]
     fn part_1_should_work() {
-        let ans = process_part1("./sample.input").unwrap();
+        let ans = process_part1("./sample-1.input").unwrap();
         assert_eq!(ans, 142);
+    }
+
+    #[test]
+    fn part_2_should_work() {
+        let ans = process_part2("./sample-2.input").unwrap();
+        assert_eq!(ans, 281);
     }
 }
