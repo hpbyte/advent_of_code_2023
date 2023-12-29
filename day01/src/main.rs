@@ -6,13 +6,25 @@ use soln::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let filename = &args[1];
+    let part = args.get(1).expect("please provide the part no. [1/2]");
 
-    if let Some(ans) = process_part1(filename) {
-        println!("The sum of all of the calibration values: {}", ans);
-    }
+    let sample1 = String::from("./sample-1.input");
+    let sample2 = String::from("./sample-2.input");
 
-    if let Some(ans) = process_part2(filename) {
+    let filename = match part.as_str() {
+        "1" => args.get(2).unwrap_or(&sample1),
+        "2" => args.get(2).unwrap_or(&sample2),
+        _ => {
+            eprintln!("Invalid part no. Please provide 1 or 2.");
+            return;
+        }
+    };
+
+    if let Some(ans) = match part.as_str() {
+        "1" => process_part1(filename),
+        "2" => process_part2(filename),
+        _ => Some(0),
+    } {
         println!("The sum of all of the calibration values: {}", ans);
     }
 }
