@@ -2,6 +2,10 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+const DIGITS: [&[u8]; 9] = [
+    b"one", b"two", b"three", b"four", b"five", b"six", b"seven", b"eight", b"nine",
+];
+
 pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where
     P: AsRef<Path>,
@@ -10,61 +14,71 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn extract_numbers(line: &str) -> Vec<u32> {
-    line.chars().filter_map(|c| c.to_digit(10)).collect()
+fn extract_number(line: &str) -> u32 {
+    let digits: Vec<u32> = line
+        .as_bytes()
+        .iter()
+        .filter_map(|b| {
+            if b.is_ascii_digit() {
+                return Some(b.wrapping_sub(b'0') as u32);
+            }
+
+            None
+        })
+        .collect();
+
+    let first = digits.first().unwrap();
+    let last = digits.last().unwrap();
+
+    first * 10 + last
 }
 
-fn extract_first_and_last_number(numbers: Vec<u32>) -> Option<(u32, u32)> {
-    if let Some(first) = numbers.first().cloned() {
-        let last = *numbers.last().unwrap_or(&0);
-        Some((first, last))
-    } else {
-        None
-    }
-}
+/**
+ * convert written form to digit
+ * e.g. one -> 1, two -> 2
+ */
+fn convert_and_extract_number(line: &str) -> u32 {
+    let mut line = line.as_bytes();
 
-fn text_to_number(line: &str) -> String {
-    let mappings: Vec<(&str, &str)> = vec![
-        ("zero", "0"),
-        ("one", "1"),
-        ("two", "2"),
-        ("three", "3"),
-        ("four", "4"),
-        ("five", "5"),
-        ("six", "6"),
-        ("seven", "7"),
-        ("eight", "8"),
-        ("nine", "9"),
-    ];
-
-    let mut result = line.to_string();
-    let mut temp_result = String::new();
-
-    for c in result.chars() {
-        temp_result.push(c);
-        if let Some((word, digit)) = mappings
-            .iter()
-            .find(|(word, _)| temp_result.ends_with(word))
-        {
-            temp_result = temp_result[..temp_result.len() - word.len()].to_string() + digit;
+    let first = 'outer: loop {
+        if line[0].is_ascii_digit() {
+            break line[0].wrapping_sub(b'0') as u32;
         }
-    }
 
-    result = temp_result;
+        for (index, digit) in DIGITS.iter().enumerate() {
+            if line.starts_with(digit) {
+                break 'outer (index + 1) as u32;
+            }
+        }
 
-    result
+        line = &line[1..];
+    };
+
+    let last = 'outer: loop {
+        if line[line.len() - 1].is_ascii_digit() {
+            break line[line.len() - 1].wrapping_sub(b'0') as u32;
+        }
+
+        for (index, digit) in DIGITS.iter().enumerate() {
+            if line.ends_with(digit) {
+                break 'outer (index + 1) as u32;
+            }
+        }
+
+        line = &line[..line.len() - 1];
+    };
+
+    first * 10 + last
 }
 
 pub fn process_part1(filename: &str) -> Option<u32> {
     if let Ok(lines) = read_lines(filename) {
-        let mut sum = 0;
-        for line in lines {
-            if let Ok(str) = line {
-                if let Some((first, last)) = extract_first_and_last_number(extract_numbers(&str)) {
-                    sum = sum + (first * 10) + last;
-                }
-            }
-        }
+        let sum: u32 = lines
+            .filter_map(|line_result| match line_result {
+                Ok(line) => Some(extract_number(&line)),
+                Err(_) => None,
+            })
+            .sum();
 
         return Some(sum);
     }
@@ -74,16 +88,12 @@ pub fn process_part1(filename: &str) -> Option<u32> {
 
 pub fn process_part2(filename: &str) -> Option<u32> {
     if let Ok(lines) = read_lines(filename) {
-        let mut sum = 0;
-        for line in lines {
-            if let Ok(str) = line {
-                if let Some((first, last)) =
-                    extract_first_and_last_number(extract_numbers(text_to_number(&str).as_str()))
-                {
-                    sum = sum + (first * 10) + last;
-                }
-            }
-        }
+        let sum: u32 = lines
+            .filter_map(|line_result| match line_result {
+                Ok(line) => Some(convert_and_extract_number(&line)),
+                Err(_) => None,
+            })
+            .sum();
 
         return Some(sum);
     }

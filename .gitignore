@@ -16,3 +16,6 @@ Cargo.lock
 # vim sessions
 *.vim
 
+.DS_Store
+*.txt
+day*/test.input
