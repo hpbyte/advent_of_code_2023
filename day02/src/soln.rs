@@ -14,14 +14,11 @@ where
 fn parse_color_and_count(cube_set: &str) -> Result<(&str, i32), String> {
     let parts: Vec<&str> = cube_set.split_whitespace().collect();
     if parts.len() != 2 {
-        return Err("the cube set format is wrong!".to_string());
+        return Err("Incorrect format: expected two parts".to_string());
     }
 
-    let count = parts[0];
-    let color = parts[1];
-
-    match count.parse::<i32>() {
-        Ok(count) => Ok((color, count)),
+    match parts[0].parse::<i32>() {
+        Ok(count) => Ok((parts[1], count)),
         Err(_) => Err("failed to parse number".to_string()),
     }
 }
@@ -32,22 +29,25 @@ fn parse_game_id(game: &str) -> Result<u32, u32> {
         return Err(0);
     }
 
-    let game = parts[1];
-
-    match game.parse::<u32>() {
+    match parts[1].parse::<u32>() {
         Ok(game) => Ok(game),
         Err(_) => Err(0),
     }
 }
 
 fn find_possible_game(line: &str) -> u32 {
-    let splitted = line.split(":").collect::<Vec<&str>>();
+    let mut parts = line.split(':');
+    let game_id_str = parts.next().unwrap_or("");
+    let sets = match parts.next() {
+        Some(sets) => sets,
+        None => return 0,
+    };
 
-    for set in splitted[1].split(";") {
+    for set in sets.split(';') {
         let mut cube_counts: HashMap<&str, i32> =
             HashMap::from([("red", 12), ("green", 13), ("blue", 14)]);
 
-        for cube_set in set.split(",") {
+        for cube_set in set.split(',') {
             if let Ok((color, count)) = parse_color_and_count(cube_set) {
                 let current_count = cube_counts.entry(color).or_insert(0);
                 *current_count -= count;
@@ -59,24 +59,19 @@ fn find_possible_game(line: &str) -> u32 {
         }
     }
 
-    parse_game_id(splitted[0]).unwrap_or(0)
+    parse_game_id(game_id_str).unwrap_or(0)
 }
 
 pub fn process_part1(filename: &str) -> Option<u32> {
-    if let Ok(lines) = read_lines(filename) {
-        let sum: u32 = lines
-            .filter_map(|line_result| match line_result {
-                Ok(line) => Some(find_possible_game(&line)),
-                Err(_) => None,
-            })
-            .sum();
-
-        return Some(sum);
-    }
-
-    None
+    read_lines(filename)
+        .ok()?
+        .map(|line_result| {
+            line_result
+                .ok()
+                .and_then(|line| Some(find_possible_game(&line)))
+        })
+        .sum()
 }
-
 pub fn process_part2(filename: &str) -> Option<u32> {
     Some(0)
 }
