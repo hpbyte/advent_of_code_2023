@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -11,67 +10,52 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn parse_color_and_count(cube_set: &str) -> Result<(&str, i32), String> {
-    let parts: Vec<&str> = cube_set.split_whitespace().collect();
-    if parts.len() != 2 {
-        return Err("Incorrect format: expected two parts".to_string());
-    }
+struct Game(u32, u32, u32);
 
-    match parts[0].parse::<i32>() {
-        Ok(count) => Ok((parts[1], count)),
-        Err(_) => Err("failed to parse number".to_string()),
-    }
+fn parse_count(count: &str) -> u32 {
+    count.parse::<u32>().unwrap_or(0)
 }
 
-fn parse_game_id(game: &str) -> Result<u32, u32> {
-    let parts: Vec<&str> = game.split_whitespace().collect();
-    if parts.len() != 2 {
-        return Err(0);
-    }
-
-    match parts[1].parse::<u32>() {
-        Ok(game) => Ok(game),
-        Err(_) => Err(0),
-    }
+fn clean(input: &str) -> String {
+    input.replace(",", "").replace(";", "")
 }
 
-fn find_possible_game(line: &str) -> u32 {
-    let mut parts = line.split(':');
-    let game_id_str = parts.next().unwrap_or("");
-    let sets = match parts.next() {
-        Some(sets) => sets,
-        None => return 0,
-    };
+fn parse(line: &str) -> Game {
+    line.split(":")
+        .last()
+        .unwrap()
+        .split_ascii_whitespace()
+        .collect::<Vec<&str>>()
+        .chunks_exact(2)
+        .fold(Game(0, 0, 0), |Game(r, g, b), chunk| {
+            let count = parse_count(chunk[0]);
+            let color = clean(chunk[1]);
 
-    for set in sets.split(';') {
-        let mut cube_counts: HashMap<&str, i32> =
-            HashMap::from([("red", 12), ("green", 13), ("blue", 14)]);
-
-        for cube_set in set.split(',') {
-            if let Ok((color, count)) = parse_color_and_count(cube_set) {
-                let current_count = cube_counts.entry(color).or_insert(0);
-                *current_count -= count;
-
-                if *current_count < 0 {
-                    return 0;
-                }
+            match color.as_str() {
+                "red" => Game(r.max(count), g, b),
+                "green" => Game(r, g.max(count), b),
+                "blue" => Game(r, g, b.max(count)),
+                _ => unreachable!(),
             }
-        }
-    }
-
-    parse_game_id(game_id_str).unwrap_or(0)
+        })
 }
 
 pub fn process_part1(filename: &str) -> Option<u32> {
-    read_lines(filename)
+    let res: u32 = read_lines(filename)
         .ok()?
-        .map(|line_result| {
-            line_result
-                .ok()
-                .and_then(|line| Some(find_possible_game(&line)))
+        .enumerate()
+        .filter_map(|(game_index, line_result)| {
+            line_result.ok().and_then(|line| {
+                let Game(r, g, b) = parse(&line);
+
+                (r <= 12 && g <= 13 && b <= 14).then_some((game_index + 1) as u32)
+            })
         })
-        .sum()
+        .sum();
+
+    Some(res)
 }
-pub fn process_part2(filename: &str) -> Option<u32> {
+
+pub fn process_part2(_filename: &str) -> Option<u32> {
     Some(0)
 }
