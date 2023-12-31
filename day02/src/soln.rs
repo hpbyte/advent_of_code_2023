@@ -56,6 +56,16 @@ pub fn process_part1(filename: &str) -> Option<u32> {
     Some(res)
 }
 
-pub fn process_part2(_filename: &str) -> Option<u32> {
-    Some(0)
+pub fn process_part2(filename: &str) -> Option<u32> {
+    let res: u32 = read_lines(filename)
+        .ok()?
+        .filter_map(|line_result| {
+            line_result.ok().and_then(|line| {
+                let Game(r, g, b) = parse(&line);
+                Some((r * g * b) as u32)
+            })
+        })
+        .sum();
+
+    Some(res)
 }
