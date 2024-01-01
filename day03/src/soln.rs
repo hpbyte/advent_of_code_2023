@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -91,6 +92,78 @@ pub fn process_part1(filename: &str) -> Option<i32> {
     None
 }
 
-pub fn process_part2(_filename: &str) -> Option<i32> {
-    Some(0)
+fn check_is_part_number_2(
+    origin: &Point,
+    current_num: &mut i32,
+    gear_point: &mut Option<Point>,
+    grid: &Vec<Vec<char>>,
+) {
+    let rows = grid.len();
+    let cols = grid.first().unwrap().len();
+
+    for point in DIAGONAL.iter().copied().map(|d| *origin + d) {
+        let x = point.x as usize;
+        let y = point.y as usize;
+
+        // ensure the indices are in bound
+        if y < rows && x < cols {
+            let adjacent = grid[y][x];
+
+            // check the right side of the origin to see if the number will be continuous
+            if point == RIGHT.clone() + *origin && adjacent.is_digit(10) {
+                *current_num *= 10;
+
+                // can skip the symbol check as it's a number
+                continue;
+            }
+
+            // is the adjacent a gear *
+            if adjacent == '*' {
+                *gear_point = Some(point);
+            }
+        }
+    }
+}
+
+pub fn process_part2(filename: &str) -> Option<i32> {
+    if let Ok(grid) = construct_grid(filename) {
+        let mut num = 0;
+        let mut gear_point: Option<Point> = None;
+        let mut part_numbers: HashMap<Point, Vec<i32>> = HashMap::new();
+
+        for (y, row) in grid.iter().enumerate() {
+            for (x, col) in row.iter().enumerate() {
+                if !col.is_digit(10) {
+                    if let Some(point) = gear_point {
+                        part_numbers.entry(point).or_insert_with(Vec::new).push(num);
+                        gear_point = None;
+                    }
+                    num = 0;
+
+                    continue;
+                }
+
+                num += col.to_digit(10).unwrap_or(0) as i32;
+
+                let origin = Point::new(x as i32, y as i32);
+
+                check_is_part_number_2(&origin, &mut num, &mut gear_point, &grid);
+            }
+        }
+
+        let sum: i32 = part_numbers
+            .values()
+            .filter_map(|nums| {
+                if nums.len() == 2 {
+                    Some(nums[0] * nums[1])
+                } else {
+                    None
+                }
+            })
+            .sum();
+
+        return Some(sum);
+    }
+
+    None
 }

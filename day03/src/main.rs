@@ -46,6 +46,6 @@ mod tests {
     #[test]
     fn part_2_should_work() {
         let ans = process_part2("./sample-2.input").unwrap();
-        assert_eq!(ans, 0);
+        assert_eq!(ans, 467835);
     }
 }
