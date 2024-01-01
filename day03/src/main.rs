@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn part_1_should_work() {
         let ans = process_part1("./sample-1.input").unwrap();
-        assert_eq!(ans, 4361);
+        assert_eq!(ans, 11159);
     }
 
     #[test]

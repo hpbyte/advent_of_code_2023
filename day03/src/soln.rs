@@ -61,11 +61,10 @@ fn check_is_part_number(
 pub fn process_part1(filename: &str) -> Option<i32> {
     if let Ok(grid) = construct_grid(filename) {
         let mut sum: i32 = 0;
+        let mut num = 0;
+        let mut is_part_number = false;
 
         for (y, row) in grid.iter().enumerate() {
-            let mut num = 0;
-            let mut is_part_number = false;
-
             for (x, col) in row.iter().enumerate() {
                 if !col.is_digit(10) {
                     if is_part_number {
