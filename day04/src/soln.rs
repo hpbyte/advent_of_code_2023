@@ -67,6 +67,16 @@ pub fn process_part1(filename: &str) -> Option<i32> {
     None
 }
 
-pub fn process_part2(_filename: &str) -> Option<i32> {
-    Some(0)
+pub fn process_part2(filename: &str) -> Option<i32> {
+    if let Ok(lines) = read_lines(filename) {
+        let sum = lines
+            .filter_map(|line_result| line_result.ok())
+            .filter_map(|line| parse(&line).ok())
+            .map(|_card| 1)
+            .sum();
+
+        return Some(sum);
+    }
+
+    None
 }
