@@ -80,17 +80,18 @@ pub fn process_part2(filename: &str) -> Option<u32> {
                 HashMap::new(),
                 |mut accu: HashMap<usize, u32>, (index, match_count)| {
                     let card_no = index + 1;
-                    accu.entry(card_no).or_insert(0);
-                    accu.entry(card_no).and_modify(|count| *count += 1);
 
-                    let iterations = *accu.get(&card_no).unwrap_or(&0_u32);
+                    // no of iterations
+                    accu.entry(card_no)
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
 
-                    (0..iterations).for_each(|_| {
-                        (0..(match_count) as usize).for_each(|index| {
+                    for _ in 0..accu[&card_no] {
+                        for index in 0..(match_count) as usize {
                             let key = card_no + index + 1;
                             accu.entry(key).and_modify(|count| *count += 1).or_insert(1);
-                        });
-                    });
+                        }
+                    }
 
                     accu
                 },
