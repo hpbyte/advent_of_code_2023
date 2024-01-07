@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -39,27 +39,29 @@ fn parse(card: &str) -> Result<(HashSet<String>, Vec<String>), &'static str> {
     Ok((winning_numbers, numbers))
 }
 
-fn calculate_points(parsed_card: &(HashSet<String>, Vec<String>)) -> i32 {
+fn find_match_count(parsed_card: &(HashSet<String>, Vec<String>)) -> u32 {
     let (winning_numbers, numbers) = parsed_card;
-    let count = numbers
+    numbers
         .iter()
         .filter(|num| winning_numbers.contains(*num))
-        .count() as u32;
+        .count() as u32
+}
 
+fn calculate_points(count: u32) -> u32 {
     if count == 0 {
         return 0;
     }
 
-    2_i32.pow(count - 1)
+    2_u32.pow(count - 1)
 }
 
-pub fn process_part1(filename: &str) -> Option<i32> {
+pub fn process_part1(filename: &str) -> Option<u32> {
     if let Ok(lines) = read_lines(filename) {
         let sum = lines
             .filter_map(|line_result| line_result.ok())
             .filter_map(|line| parse(&line).ok())
-            .map(|card| calculate_points(&card))
-            .sum();
+            .map(|card| calculate_points(find_match_count(&card)))
+            .sum::<u32>();
 
         return Some(sum);
     }
@@ -67,15 +69,36 @@ pub fn process_part1(filename: &str) -> Option<i32> {
     None
 }
 
-pub fn process_part2(filename: &str) -> Option<i32> {
+pub fn process_part2(filename: &str) -> Option<u32> {
     if let Ok(lines) = read_lines(filename) {
-        let sum = lines
+        let total_cards = lines
             .filter_map(|line_result| line_result.ok())
             .filter_map(|line| parse(&line).ok())
-            .map(|_card| 1)
-            .sum();
+            .map(|card| find_match_count(&card))
+            .enumerate()
+            .fold(
+                HashMap::new(),
+                |mut accu: HashMap<usize, u32>, (index, match_count)| {
+                    let card_no = index + 1;
+                    accu.entry(card_no).or_insert(0);
+                    accu.entry(card_no).and_modify(|count| *count += 1);
 
-        return Some(sum);
+                    let iterations = *accu.get(&card_no).unwrap_or(&0_u32);
+
+                    (0..iterations).for_each(|_| {
+                        (0..(match_count) as usize).for_each(|index| {
+                            let key = card_no + index + 1;
+                            accu.entry(key).and_modify(|count| *count += 1).or_insert(1);
+                        });
+                    });
+
+                    accu
+                },
+            )
+            .into_values()
+            .sum::<u32>();
+
+        return Some(total_cards);
     }
 
     None
