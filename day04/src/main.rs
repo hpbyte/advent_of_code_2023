@@ -20,12 +20,18 @@ fn main() {
         }
     };
 
-    if let Some(ans) = match part.as_str() {
-        "1" => process_part1(filename),
-        "2" => process_part2(filename),
-        _ => Some(0),
-    } {
-        println!("The total points worth: {}", ans);
+    match part.as_str() {
+        "1" => {
+            if let Some(ans) = process_part1(filename) {
+                println!("The total points worth: {}", ans);
+            }
+        }
+        "2" => {
+            if let Some(ans) = process_part2(filename) {
+                println!("The total number of scratchcards: {}", ans);
+            }
+        }
+        _ => unreachable!(),
     }
 }
 
