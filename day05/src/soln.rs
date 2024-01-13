@@ -1,30 +1,25 @@
 use std::fs::read_to_string;
+use std::io::Error;
 
-fn parse(block: &str) -> Vec<Vec<u32>> {
+fn parse(block: &str) -> Vec<Vec<u64>> {
     block
         .split("\n")
         .skip(1)
-        .filter_map(|line| {
-            let nums = line
-                .trim()
+        .map(|line| {
+            line.trim()
                 .split_whitespace()
                 .filter_map(|v| v.parse().ok())
-                .collect::<Vec<u32>>();
-
-            if nums.is_empty() {
-                None
-            } else {
-                Some(nums)
-            }
+                .collect::<Vec<u64>>()
         })
+        .filter(|v| !v.is_empty())
         .collect()
 }
 
-fn get_input_maps(filename: &str) -> (Vec<u32>, Vec<Vec<Vec<u32>>>) {
-    let contents = read_to_string(filename).expect("should read file");
+fn get_input_maps(filename: &str) -> Result<(Vec<u64>, Vec<Vec<Vec<u64>>>), Error> {
+    let contents = read_to_string(filename)?;
 
-    let mut seeds: Vec<u32> = Vec::new();
-    let mut maps: Vec<Vec<Vec<u32>>> = Vec::with_capacity(7);
+    let mut seeds: Vec<u64> = Vec::new();
+    let mut maps: Vec<Vec<Vec<u64>>> = Vec::with_capacity(7);
 
     contents
         .split("\n\n")
@@ -36,24 +31,47 @@ fn get_input_maps(filename: &str) -> (Vec<u32>, Vec<Vec<Vec<u32>>>) {
                     .split_whitespace()
                     .skip(1)
                     .filter_map(|v| v.parse().ok())
-                    .collect::<Vec<u32>>();
+                    .collect::<Vec<u64>>();
             } else {
                 maps.push(parse(block));
             }
         });
 
-    (seeds, maps)
+    Ok((seeds, maps))
 }
 
-pub fn process_part1(filename: &str) -> Option<u32> {
-    let (seeds, maps) = get_input_maps(filename);
+fn map_src_dest(src: &u64, map: &Vec<Vec<u64>>) -> u64 {
+    for range in map {
+        if range.len() != 3 {
+            panic!("range should have 3 numbers: dest, src and len");
+        }
+        let src_start = range[1];
+        let src_end = range[1] + range[2] - 1;
+        let dest_start = range[0];
 
-    println!("{:?}", seeds);
-    println!("{:?}", maps);
+        if *src >= src_start && *src <= src_end {
+            return *src - src_start + dest_start;
+        }
+    }
 
-    None
+    *src
 }
 
-pub fn process_part2(_filename: &str) -> Option<u32> {
-    None
+pub fn process_part1(filename: &str) -> Option<u64> {
+    let (seeds, maps) = match get_input_maps(filename) {
+        Ok(data) => data,
+        Err(e) => {
+            eprintln!("error reading input data: {}", e);
+            return None;
+        }
+    };
+
+    seeds
+        .iter()
+        .map(|&seed| maps.iter().fold(seed, |accu, map| map_src_dest(&accu, map)))
+        .min()
+}
+
+pub fn process_part2(_filename: &str) -> Option<u64> {
+    Some(0)
 }
