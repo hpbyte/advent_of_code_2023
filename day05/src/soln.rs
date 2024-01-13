@@ -72,6 +72,30 @@ pub fn process_part1(filename: &str) -> Option<u64> {
         .min()
 }
 
-pub fn process_part2(_filename: &str) -> Option<u64> {
-    Some(0)
+fn get_seeds_from_range(range: Vec<u64>) -> Vec<u64> {
+    range
+        .chunks_exact(2)
+        .flat_map(|chunk| {
+            if chunk.len() != 2 {
+                panic!("seed range format is invalid!");
+            }
+
+            chunk[0]..(chunk[0] + chunk[1])
+        })
+        .collect::<Vec<u64>>()
+}
+
+pub fn process_part2(filename: &str) -> Option<u64> {
+    let (seeds_range, maps) = match get_input_maps(filename) {
+        Ok(data) => data,
+        Err(e) => {
+            eprintln!("error reading input data: {}", e);
+            return None;
+        }
+    };
+
+    get_seeds_from_range(seeds_range)
+        .iter()
+        .map(|&seed| maps.iter().fold(seed, |accu, map| map_src_dest(&accu, map)))
+        .min()
 }
