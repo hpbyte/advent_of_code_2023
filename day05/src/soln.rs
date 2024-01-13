@@ -40,7 +40,7 @@ fn get_input_maps(filename: &str) -> Result<(Vec<u64>, Vec<Vec<Vec<u64>>>), Erro
     Ok((seeds, maps))
 }
 
-fn map_src_dest(src: &u64, map: &Vec<Vec<u64>>) -> u64 {
+fn walk(src: &u64, map: &Vec<Vec<u64>>) -> u64 {
     for range in map {
         if range.len() != 3 {
             panic!("range should have 3 numbers: dest, src and len");
@@ -68,7 +68,7 @@ pub fn process_part1(filename: &str) -> Option<u64> {
 
     seeds
         .iter()
-        .map(|&seed| maps.iter().fold(seed, |accu, map| map_src_dest(&accu, map)))
+        .map(|&seed| maps.iter().fold(seed, |accu, map| walk(&accu, map)))
         .min()
 }
 
@@ -96,6 +96,6 @@ pub fn process_part2(filename: &str) -> Option<u64> {
 
     get_seeds_from_range(seeds_range)
         .iter()
-        .map(|&seed| maps.iter().fold(seed, |accu, map| map_src_dest(&accu, map)))
+        .map(|&seed| maps.iter().fold(seed, |accu, map| walk(&accu, map)))
         .min()
 }
