@@ -8,15 +8,15 @@ Follow the [instructions here](https://doc.rust-lang.org/book/ch01-01-installati
 
 ## Usage
 
-Each problem is separated by the folder denoted by the day order (e.g. day01). To run the code, go to the desired problem's directory and run with cargo followed by the input test file path.
+Each problem is separated by the folder denoted by the day order (e.g. day01). Since each problem is structured as a standalone without having any dependencies, in order to run, go to the desired problem's directory and run with cargo as follows.
 
 ```
 cd day01
 
-cargo run sample-1.input
+cargo run PART_NUMBER # part 1 or 2
 
 # or run with the actual test file
-cargo run test.input
+cargo run PART_NUMBER test.input
 ```
 
 ## Testing
