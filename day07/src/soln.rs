@@ -4,7 +4,7 @@ use std::path::Path;
 
 #[derive(Debug)]
 struct Hand {
-    cards: Vec<char>,
+    cards: [u8; 5],
     bid: usize,
 }
 
@@ -18,40 +18,35 @@ where
 
 fn parse(line: &str) -> Hand {
     let (cards, bid) = line.split_at(5);
-    let cards = cards.chars().collect();
+    let cards = cards.as_bytes().try_into().unwrap();
     let bid = bid.trim().parse().ok().unwrap();
 
     Hand { cards, bid }
 }
 
-fn to_num(hand: Hand) -> (usize, usize) {
-    let nums = hand
-        .cards
-        .iter()
-        .map(|card| match card {
-            'A' => "14".to_string(),
-            'K' => "13".to_string(),
-            'Q' => "12".to_string(),
-            'J' => "11".to_string(),
-            'T' => "10".to_string(),
-            _ if card.is_digit(10) => card.to_string(),
-            _ => unreachable!(),
-        })
-        .collect::<String>()
-        .parse::<usize>()
-        .unwrap_or(0);
-
-    (nums, hand.bid)
+fn substitute(hand: &mut Hand) {
+    for card in &mut hand.cards {
+        *card = match card {
+            b'A' => b'>',
+            b'K' => b'=',
+            b'Q' => b'<',
+            b'J' => b';',
+            b'T' => b':',
+            _ => *card,
+        }
+    }
 }
 
 pub fn process_part1(filename: &str) -> Option<u64> {
     if let Ok(lines) = read_lines(filename) {
-        let parsed: Vec<(usize, usize)> = lines
+        let mut hands = lines
             .filter_map(|line| line.ok())
-            .map(|line| to_num(parse(&line)))
-            .collect();
+            .map(|line| parse(&line))
+            .collect::<Vec<Hand>>();
 
-        println!("{:?}", parsed);
+        hands.iter_mut().for_each(|hand| substitute(hand));
+
+        println!("after: {:?}", hands);
 
         return Some(0);
     }
