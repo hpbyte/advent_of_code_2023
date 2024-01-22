@@ -2,6 +2,14 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+// five of a kind   AAAAA
+// four of a kind   AAAA1
+// full house       AAA11
+// three of a kind  AAA12
+// two pair         AA112
+// one pair         AA123
+// high card        A1234
+
 #[derive(Debug)]
 struct Hand {
     cards: [u8; 5],
@@ -24,36 +32,69 @@ fn parse(line: &str) -> Hand {
     Hand { cards, bid }
 }
 
-fn substitute(hand: &mut Hand) {
-    for card in &mut hand.cards {
-        *card = match card {
-            b'A' => b'>',
-            b'K' => b'=',
-            b'Q' => b'<',
-            b'J' => b';',
-            b'T' => b':',
-            _ => *card,
-        }
-    }
+fn get_ranks(hand: &Hand) -> [usize; 5] {
+    hand.cards.map(|card| match card {
+        b'A' => 14,
+        b'K' => 13,
+        b'Q' => 12,
+        b'J' => 11,
+        b'T' => 10,
+        _ => card.wrapping_sub(b'0') as usize,
+    })
 }
 
-pub fn process_part1(filename: &str) -> Option<u64> {
+fn sort(hands: &[Hand]) -> Vec<(usize, usize)> {
+    let mut ranked: Vec<(usize, usize)> = hands
+        .iter()
+        .map(|hand| {
+            let rank = get_ranks(hand);
+
+            let mut freq = [0; 15];
+            rank.iter().for_each(|&r| freq[r as usize] += 1);
+
+            let jokers = freq[1];
+            freq[1] = 0;
+            freq.sort_unstable();
+            freq.reverse();
+            freq[0] += jokers;
+
+            let mut key = 0;
+
+            for f in freq.iter().take(5) {
+                key = (key << 4) | f;
+            }
+            for r in rank {
+                key = (key << 4) | r;
+            }
+
+            (key, hand.bid)
+        })
+        .collect();
+
+    ranked.sort_unstable();
+
+    ranked
+}
+
+pub fn process_part1(filename: &str) -> Option<usize> {
     if let Ok(lines) = read_lines(filename) {
-        let mut hands = lines
+        let hands = lines
             .filter_map(|line| line.ok())
             .map(|line| parse(&line))
             .collect::<Vec<Hand>>();
 
-        hands.iter_mut().for_each(|hand| substitute(hand));
+        let total = sort(&hands)
+            .iter()
+            .enumerate()
+            .map(|(rank, (_, bid))| (rank + 1) * bid)
+            .sum();
 
-        println!("after: {:?}", hands);
-
-        return Some(0);
+        return Some(total);
     }
 
     None
 }
 
-pub fn process_part2(_filename: &str) -> Option<u64> {
+pub fn process_part2(_filename: &str) -> Option<usize> {
     Some(0)
 }
