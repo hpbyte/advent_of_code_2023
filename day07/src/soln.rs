@@ -32,22 +32,22 @@ fn parse(line: &str) -> Hand {
     Hand { cards, bid }
 }
 
-fn get_ranks(hand: &Hand) -> [usize; 5] {
+fn get_ranks(hand: &Hand, j: usize) -> [usize; 5] {
     hand.cards.map(|card| match card {
         b'A' => 14,
         b'K' => 13,
         b'Q' => 12,
-        b'J' => 11,
+        b'J' => j,
         b'T' => 10,
         _ => card.wrapping_sub(b'0') as usize,
     })
 }
 
-fn sort(hands: &[Hand]) -> Vec<(usize, usize)> {
+fn sort(hands: &[Hand], j: usize) -> Vec<(usize, usize)> {
     let mut ranked: Vec<(usize, usize)> = hands
         .iter()
         .map(|hand| {
-            let rank = get_ranks(hand);
+            let rank = get_ranks(hand, j);
 
             let mut freq = [0; 15];
             rank.iter().for_each(|&r| freq[r as usize] += 1);
@@ -83,7 +83,7 @@ pub fn process_part1(filename: &str) -> Option<usize> {
             .map(|line| parse(&line))
             .collect::<Vec<Hand>>();
 
-        let total = sort(&hands)
+        let total = sort(&hands, 11)
             .iter()
             .enumerate()
             .map(|(rank, (_, bid))| (rank + 1) * bid)
@@ -95,6 +95,21 @@ pub fn process_part1(filename: &str) -> Option<usize> {
     None
 }
 
-pub fn process_part2(_filename: &str) -> Option<usize> {
-    Some(0)
+pub fn process_part2(filename: &str) -> Option<usize> {
+    if let Ok(lines) = read_lines(filename) {
+        let hands = lines
+            .filter_map(|line| line.ok())
+            .map(|line| parse(&line))
+            .collect::<Vec<Hand>>();
+
+        let total = sort(&hands, 1)
+            .iter()
+            .enumerate()
+            .map(|(rank, (_, bid))| (rank + 1) * bid)
+            .sum();
+
+        return Some(total);
+    }
+
+    None
 }
