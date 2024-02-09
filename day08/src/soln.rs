@@ -20,7 +20,6 @@ fn parse(filename: &str) -> Result<Map, io::Error> {
 
     nodes_str.lines().for_each(|line| {
         let (node, elements) = line.split_once(" = ").unwrap();
-
         let (left, right) = elements.split_once(", ").unwrap();
 
         nodes.insert(
@@ -35,10 +34,39 @@ fn parse(filename: &str) -> Result<Map, io::Error> {
     })
 }
 
+fn traverse(map: Map) -> u32 {
+    let mut steps: u32 = 0;
+    let goal = "ZZZ";
+    let mut curr = "AAA";
+    let mut i: usize = 0;
+    let instructions = map.instructions.as_bytes();
+
+    loop {
+        // repeat the instrction from the start
+        if i >= instructions.len() {
+            i = 0;
+        }
+
+        curr = match instructions[i] as char {
+            'L' => map.nodes.get(curr).unwrap().0.as_str(),
+            'R' => map.nodes.get(curr).unwrap().1.as_str(),
+            _ => panic!("invalid instruction!"),
+        };
+
+        i += 1;
+        steps += 1;
+
+        if curr == goal {
+            break;
+        }
+    }
+
+    steps
+}
+
 pub fn process_part1(filename: &str) -> Option<u32> {
-    if let Ok(result) = parse(filename) {
-        println!("{:?}", result);
-        return Some(0);
+    if let Ok(parsed) = parse(filename) {
+        return Some(traverse(parsed));
     }
 
     None
