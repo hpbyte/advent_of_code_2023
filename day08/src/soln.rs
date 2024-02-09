@@ -35,9 +35,9 @@ fn parse(filename: &str) -> Result<Map, io::Error> {
 }
 
 fn traverse(map: Map) -> u32 {
-    let mut steps: u32 = 0;
     let goal = "ZZZ";
     let mut curr = "AAA";
+    let mut steps: u32 = 0;
     let mut i: usize = 0;
     let instructions = map.instructions.as_bytes();
 
