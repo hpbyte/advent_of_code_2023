@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
+use std::fs::read_to_string;
+use std::io;
 
 #[derive(Debug)]
 struct Map {
@@ -9,28 +8,40 @@ struct Map {
     nodes: HashMap<String, (String, String)>,
 }
 
-pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
-}
+fn parse(filename: &str) -> Result<Map, io::Error> {
+    let result = read_to_string(filename).unwrap();
 
-fn parse(filename: &str) -> Map {
-    let mut nodes = HashMap::new();
-    nodes.insert(
-        String::from("AAA"),
-        (String::from("AAA"), String::from("AAA")),
-    );
+    let (instructions, nodes_str) = result.split_once("\n\n").ok_or(io::Error::new(
+        io::ErrorKind::InvalidData,
+        "Invalid file format",
+    ))?;
 
-    Map {
-        instructions: String::from("LLR"),
+    let mut nodes: HashMap<String, (String, String)> = HashMap::new();
+
+    nodes_str.lines().for_each(|line| {
+        let (node, elements) = line.split_once(" = ").unwrap();
+
+        let (left, right) = elements.split_once(", ").unwrap();
+
+        nodes.insert(
+            node.to_string(),
+            (left.replace("(", ""), right.replace(")", "")),
+        );
+    });
+
+    Ok(Map {
+        instructions: instructions.to_string(),
         nodes,
-    }
+    })
 }
+
 pub fn process_part1(filename: &str) -> Option<u32> {
-    Some(0)
+    if let Ok(result) = parse(filename) {
+        println!("{:?}", result);
+        return Some(0);
+    }
+
+    None
 }
 
 pub fn process_part2(_filename: &str) -> Option<u32> {
