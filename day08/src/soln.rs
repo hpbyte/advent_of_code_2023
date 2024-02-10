@@ -33,10 +33,9 @@ fn parse(filename: &str) -> Result<Map, io::Error> {
     })
 }
 
-fn traverse(map: Map) -> u32 {
-    let goal = "ZZZ";
-    let mut curr = "AAA";
-    let mut steps: u32 = 0;
+fn traverse(map: &Map, start: &str) -> u64 {
+    let mut curr = start;
+    let mut steps: u64 = 0;
     let mut i: usize = 0;
     let instructions = map.instructions.as_bytes();
 
@@ -55,7 +54,7 @@ fn traverse(map: Map) -> u32 {
         i += 1;
         steps += 1;
 
-        if curr == goal {
+        if curr.ends_with("Z") {
             break;
         }
     }
@@ -63,21 +62,38 @@ fn traverse(map: Map) -> u32 {
     steps
 }
 
-fn traverse_multi(map: Map) -> u32 {
-    6
+fn traverse_multi(map: &Map) -> u64 {
+    map.nodes
+        .keys()
+        .filter(|k| k.ends_with('A'))
+        .map(|node| traverse(map, node))
+        .reduce(lcm)
+        .unwrap_or(0)
 }
 
-pub fn process_part1(filename: &str) -> Option<u32> {
+fn gcd(a: u64, b: u64) -> u64 {
+    let remainder = a % b;
+    if remainder == 0 {
+        return b;
+    }
+    return gcd(b, remainder);
+}
+
+fn lcm(a: u64, b: u64) -> u64 {
+    a * (b / gcd(a, b))
+}
+
+pub fn process_part1(filename: &str) -> Option<u64> {
     if let Ok(parsed) = parse(filename) {
-        return Some(traverse(parsed));
+        return Some(traverse(&parsed, "AAA"));
     }
 
     None
 }
 
-pub fn process_part2(filename: &str) -> Option<u32> {
+pub fn process_part2(filename: &str) -> Option<u64> {
     if let Ok(parsed) = parse(filename) {
-        return Some(traverse_multi(parsed));
+        return Some(traverse_multi(&parsed));
     }
 
     None
