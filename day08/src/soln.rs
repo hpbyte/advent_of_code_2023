@@ -73,7 +73,7 @@ fn gcd(a: u64, b: u64) -> u64 {
 
 // least common multiple
 fn lcm(a: u64, b: u64) -> u64 {
-    a * (b / gcd(a, b))
+    a * b / gcd(a, b)
 }
 
 pub fn process_part1(filename: &str) -> Option<u64> {
