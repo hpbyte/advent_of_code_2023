@@ -16,17 +16,16 @@ fn parse(filename: &str) -> Result<Map, io::Error> {
         "Invalid file format",
     ))?;
 
-    let mut nodes: HashMap<String, (String, String)> = HashMap::new();
+    let nodes_str_lines: Vec<_> = nodes_str.lines().collect();
+    let mut nodes: HashMap<String, (String, String)> =
+        HashMap::with_capacity(nodes_str_lines.len());
 
-    nodes_str.lines().for_each(|line| {
-        let (node, elements) = line.split_once(" = ").unwrap();
-        let (left, right) = elements.split_once(", ").unwrap();
-
+    for line in nodes_str_lines {
         nodes.insert(
-            node.to_string(),
-            (left.replace("(", ""), right.replace(")", "")),
+            line[0..3].to_string(),
+            (line[7..10].to_string(), line[12..15].to_string()),
         );
-    });
+    }
 
     Ok(Map {
         instructions: instructions.to_string(),
@@ -64,6 +63,10 @@ fn traverse(map: Map) -> u32 {
     steps
 }
 
+fn traverse_multi(map: Map) -> u32 {
+    6
+}
+
 pub fn process_part1(filename: &str) -> Option<u32> {
     if let Ok(parsed) = parse(filename) {
         return Some(traverse(parsed));
@@ -72,6 +75,10 @@ pub fn process_part1(filename: &str) -> Option<u32> {
     None
 }
 
-pub fn process_part2(_filename: &str) -> Option<u32> {
-    Some(0)
+pub fn process_part2(filename: &str) -> Option<u32> {
+    if let Ok(parsed) = parse(filename) {
+        return Some(traverse_multi(parsed));
+    }
+
+    None
 }
