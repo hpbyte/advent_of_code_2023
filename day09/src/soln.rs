@@ -31,7 +31,7 @@ fn parse(line: &str) -> Vec<Vec<i64>> {
 
     pascals_triangle.push(nums.clone());
 
-    loop {
+    while !nums.iter().all(|&n| n == 0) {
         for index in 0..nums.len() - 1 {
             nums[index] = nums[index + 1] - nums[index];
         }
@@ -39,10 +39,6 @@ fn parse(line: &str) -> Vec<Vec<i64>> {
         nums.pop();
 
         pascals_triangle.push(nums.clone());
-
-        if nums.iter().all(|&n| n == 0) {
-            break;
-        }
     }
 
     pascals_triangle
