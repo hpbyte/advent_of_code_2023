@@ -37,7 +37,7 @@ fn parse(line: &str) -> Vec<Vec<i64>> {
 
         pascals_triangle.push(nums.clone());
 
-        if nums.iter().sum::<i64>() == 0 {
+        if nums.iter().all(|&n| n == 0) {
             break;
         }
     }
