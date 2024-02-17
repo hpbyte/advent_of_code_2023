@@ -10,12 +10,14 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-fn extrapolate(triangle: Vec<Vec<i64>>) -> i64 {
-    triangle
-        .iter()
-        .rev()
-        .skip(1)
-        .fold(0, |accu, row| row.last().unwrap() + accu)
+fn extrapolate(triangle: Vec<Vec<i64>>, last: bool) -> i64 {
+    triangle.iter().rev().skip(1).fold(0, |accu, row| {
+        if last {
+            row.last().unwrap() + accu
+        } else {
+            row.first().unwrap() - accu
+        }
+    })
 }
 
 fn parse(line: &str) -> Vec<Vec<i64>> {
@@ -49,7 +51,7 @@ pub fn process_part1(filename: &str) -> Option<i64> {
     if let Ok(lines) = read_lines(filename) {
         let total = lines
             .filter_map(|line| line.ok())
-            .map(|line| extrapolate(parse(&line)))
+            .map(|line| extrapolate(parse(&line), true))
             .sum();
 
         return Some(total);
@@ -58,6 +60,15 @@ pub fn process_part1(filename: &str) -> Option<i64> {
     None
 }
 
-pub fn process_part2(_filename: &str) -> Option<i64> {
-    Some(0)
+pub fn process_part2(filename: &str) -> Option<i64> {
+    if let Ok(lines) = read_lines(filename) {
+        let total = lines
+            .filter_map(|line| line.ok())
+            .map(|line| extrapolate(parse(&line), false))
+            .sum();
+
+        return Some(total);
+    }
+
+    None
 }
