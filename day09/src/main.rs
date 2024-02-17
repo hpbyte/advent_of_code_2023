@@ -25,7 +25,7 @@ fn main() {
         "2" => process_part2(filename),
         _ => Some(0),
     } {
-        println!("total steps: {}", ans);
+        println!("sum of the extrapolated values: {}", ans);
     }
 }
 
@@ -36,12 +36,12 @@ mod tests {
     #[test]
     fn part_1_should_work() {
         let ans = process_part1("./sample-1.input").unwrap();
-        assert_eq!(ans, 6);
+        assert_eq!(ans, 114);
     }
 
     #[test]
     fn part_2_should_work() {
         let ans = process_part2("./sample-2.input").unwrap();
-        assert_eq!(ans, 6);
+        assert_eq!(ans, 0);
     }
 }

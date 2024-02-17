@@ -1,114 +1,63 @@
-use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::io;
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
 
-#[derive(Debug)]
-struct Map {
-    instructions: String,
-    nodes: HashMap<String, (String, String)>,
+pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
 }
 
-fn parse(filename: &str) -> Result<Map, io::Error> {
-    let result = read_to_string(filename).unwrap();
-
-    let (instructions, nodes_str) = result.split_once("\n\n").ok_or(io::Error::new(
-        io::ErrorKind::InvalidData,
-        "Invalid file format",
-    ))?;
-
-    let nodes_str_lines: Vec<_> = nodes_str.lines().collect();
-    let mut nodes: HashMap<String, (String, String)> =
-        HashMap::with_capacity(nodes_str_lines.len());
-
-    for line in nodes_str_lines {
-        nodes.insert(
-            line[0..3].to_string(),
-            (line[7..10].to_string(), line[12..15].to_string()),
-        );
-    }
-
-    Ok(Map {
-        instructions: instructions.to_string(),
-        nodes,
-    })
+fn extrapolate(triangle: Vec<Vec<i64>>) -> i64 {
+    triangle
+        .iter()
+        .rev()
+        .skip(1)
+        .fold(0, |accu, row| row.last().unwrap() + accu)
 }
 
-fn traverse_bfs(map: &Map, start: &str) -> u64 {
-    let mut curr = start;
-    let mut steps: u64 = 0;
-    let mut i: usize = 0;
-    let instructions = map.instructions.as_bytes();
+fn parse(line: &str) -> Vec<Vec<i64>> {
+    let mut pascals_triangle: Vec<Vec<i64>> = Vec::new();
+
+    let mut nums = line
+        .split_whitespace()
+        .filter_map(|n| n.parse::<i64>().ok())
+        .collect::<Vec<i64>>();
+
+    pascals_triangle.push(nums.clone());
 
     loop {
-        // repeat the instrction from the start
-        if i >= instructions.len() {
-            i = 0;
+        for index in 0..nums.len() - 1 {
+            nums[index] = nums[index + 1] - nums[index];
         }
 
-        curr = match instructions[i] as char {
-            'L' => map.nodes.get(curr).unwrap().0.as_str(),
-            'R' => map.nodes.get(curr).unwrap().1.as_str(),
-            _ => panic!("invalid instruction!"),
-        };
+        nums.pop();
 
-        i += 1;
-        steps += 1;
+        pascals_triangle.push(nums.clone());
 
-        if curr.ends_with("Z") {
+        if nums.iter().sum::<i64>() == 0 {
             break;
         }
     }
 
-    steps
+    pascals_triangle
 }
 
-// greatest common divisor
-fn gcd(a: u64, b: u64) -> u64 {
-    let remainder = a % b;
-    if remainder == 0 {
-        return b;
-    }
-    return gcd(b, remainder);
-}
+pub fn process_part1(filename: &str) -> Option<i64> {
+    if let Ok(lines) = read_lines(filename) {
+        let total = lines
+            .filter_map(|line| line.ok())
+            .map(|line| extrapolate(parse(&line)))
+            .sum();
 
-// least common multiple
-fn lcm(a: u64, b: u64) -> u64 {
-    a * b / gcd(a, b)
-}
-
-pub fn process_part1(filename: &str) -> Option<u64> {
-    if let Ok(parsed) = parse(filename) {
-        return Some(traverse_bfs(&parsed, "AAA"));
+        return Some(total);
     }
 
     None
 }
 
-/**
- * PART2:
- * we start from all the nodes that ends with 'A'
- * and simultaneously traverse until all the paths reach to nodes ends with 'Z'
- * the tricky part here is that in order for all the paths to finish at the same time,
- * some of them has to be repeated several times until other paths can catch up.
- * and these paths are cyclical.
- * https://www.reddit.com/r/adventofcode/comments/18did3d/2023_day_8_part_1_my_input_maze_plotted_using/
- *
- *
- * here, we don't actually repeat but compute the least common multiple of all the path lengths
- * and this gives us the one path length
- */
-pub fn process_part2(filename: &str) -> Option<u64> {
-    if let Ok(map) = parse(filename) {
-        let steps = map
-            .nodes
-            .keys()
-            .filter(|k| k.ends_with('A'))
-            .map(|node| traverse_bfs(&map, node))
-            .reduce(lcm)
-            .unwrap_or(0);
-
-        return Some(steps);
-    }
-
-    None
+pub fn process_part2(_filename: &str) -> Option<i64> {
+    Some(0)
 }
