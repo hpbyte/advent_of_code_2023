@@ -11,13 +11,14 @@ where
 }
 
 fn extrapolate(triangle: Vec<Vec<i64>>, last: bool) -> i64 {
-    triangle.iter().rev().skip(1).fold(0, |accu, row| {
-        if last {
-            row.last().unwrap() + accu
-        } else {
-            row.first().unwrap() - accu
-        }
-    })
+    triangle
+        .iter()
+        .rev()
+        .skip(1)
+        .fold(0, |accu, row| match last {
+            true => row.last().unwrap() + accu,
+            false => row.first().unwrap() - accu,
+        })
 }
 
 fn parse(line: &str) -> Vec<Vec<i64>> {
@@ -48,27 +49,19 @@ fn parse(line: &str) -> Vec<Vec<i64>> {
 }
 
 pub fn process_part1(filename: &str) -> Option<i64> {
-    if let Ok(lines) = read_lines(filename) {
-        let total = lines
-            .filter_map(|line| line.ok())
-            .map(|line| extrapolate(parse(&line), true))
-            .sum();
-
-        return Some(total);
-    }
-
-    None
+    read_lines(filename)
+        .ok()?
+        .filter_map(|line| line.ok())
+        .map(|line| extrapolate(parse(&line), true))
+        .sum::<i64>()
+        .into()
 }
 
 pub fn process_part2(filename: &str) -> Option<i64> {
-    if let Ok(lines) = read_lines(filename) {
-        let total = lines
-            .filter_map(|line| line.ok())
-            .map(|line| extrapolate(parse(&line), false))
-            .sum();
-
-        return Some(total);
-    }
-
-    None
+    read_lines(filename)
+        .ok()?
+        .filter_map(|line| line.ok())
+        .map(|line| extrapolate(parse(&line), false))
+        .sum::<i64>()
+        .into()
 }
